@@ -22,8 +22,8 @@ A voice-based AI interview platform that conducts realistic mock interviews acro
 
 ## 🗂️ Interview Types
 
-| Domain | Interviewer | Topics |
-|---|---|---|
+| Domain | Topics |
+|---|---|
 | DSA & Algorithms | Arrays, Trees, DP, Graphs |
 | System Design | Scalability, Caching, Architecture |
 | Python Backend | FastAPI, Django, Flask, pytest |
