@@ -563,7 +563,7 @@
   const firstQ    = localStorage.getItem('first_question');
   const iType     = localStorage.getItem('interview_type') || 'dsa';
 
-  if (!token || !sessionId) window.location.href = 'index.html';
+  if (!token || !sessionId) window.location.href = '/';
 
   const typeLabel = iType.replace(/_/g, ' ').toUpperCase();
   document.getElementById('typeBadge').textContent    = typeLabel;
@@ -831,7 +831,7 @@
       showTyping(false);
       if (!res.ok) throw new Error(data.detail);
       localStorage.setItem('session_result', JSON.stringify(data));
-      window.location.href = 'report.html';
+      window.location.href = '/report';
     } catch (err) {
       showTyping(false);
       alert('Error: ' + err.message);

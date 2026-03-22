@@ -852,7 +852,7 @@
       localStorage.setItem('session_id', data.session_id);
       localStorage.setItem('first_question', data.message);
       localStorage.setItem('interview_type', selectedType);
-      window.location.href = 'interview.html';
+      window.location.href = '/interview';
     } catch (e) {
       btn.textContent = 'Begin Interview →';
       btn.disabled = false;
