@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InterviewAI — Your Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#818cf8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="InterviewAI">
+  <link rel="apple-touch-icon" href="/chat-bot.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>  
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #09090b;
+      --bg2:      #111115;
+      --surface:  rgba(255,255,255,0.04);
+      --surface2: rgba(255,255,255,0.07);
+      --border:   rgba(255,255,255,0.08);
+      --border2:  rgba(255,255,255,0.14);
+      --indigo:   #818cf8;
+      --indigo2:  #a5b4fc;
+      --orange:   #fb923c;
+      --green:    #34d399;
+      --red:      #f87171;
+      --yellow:   #fbbf24;
+      --text:     #fafafa;
+      --text2:    #a1a1aa;
+      --text3:    #52525b;
+      --display:  'Bricolage Grotesque', sans-serif;
+      --mono:     'DM Mono', monospace;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--display);
+      min-height: 100vh;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.35;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: blur(90px);
+      opacity: 0.08;
+    }
+
+    .orb-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; right: -100px; }
+    .orb-2 { width: 300px; height: 300px; background: #f97316; bottom: 0; left: -80px; }
+
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(9,9,11,0.85);
+      backdrop-filter: blur(16px);
+    }
+
+    .logo {
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      color: var(--text2);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .logo-dot { width: 6px; height: 6px; background: var(--indigo); border-radius: 50%; }
+
+    .nav-btns { display: flex; gap: 0.6rem; }
+
+    .btn {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      transition: all 0.2s;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text2);
+    }
+
+    .btn-ghost:hover { border-color: var(--border2); color: var(--text); }
+
+    .btn-solid {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      border: none;
+      color: white;
+      font-weight: 600;
+    }
+
+    .btn-solid:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(99,102,241,0.3); }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 5rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Header */
+    .page-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      animation: up 0.5s ease both;
+    }
+
+    @keyframes up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .page-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--green);
+      background: rgba(52,211,153,0.08);
+      border: 1px solid rgba(52,211,153,0.2);
+      padding: 0.3rem 0.85rem;
+      border-radius: 999px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .page-tag::before { content: '✓'; }
+
+    .page-title {
+      font-size: 2.75rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 0.5rem;
+    }
+
+    .page-meta {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--text3);
+    }
+
+    /* Score hero */
+    .score-hero {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      padding: 2rem 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 1.5rem;
+      animation: up 0.5s ease 0.1s both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .score-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(99,102,241,0.06), transparent 60%);
+    }
+
+    .score-ring {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+    }
+
+    .score-ring svg { transform: rotate(-90deg); }
+
+    .score-ring circle { fill: none; stroke-width: 7; }
+    .ring-bg { stroke: rgba(255,255,255,0.06); }
+    .ring-fill {
+      stroke: var(--indigo2);
+      stroke-linecap: round;
+      stroke-dasharray: 345;
+      stroke-dashoffset: 345;
+      transition: stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1) 0.4s;
+    }
+
+    .score-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .score-num {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+
+    .score-denom {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--text3);
+    }
+
+    .score-info { flex: 1; }
+
+    .score-grade {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.35rem;
+    }
+
+    .score-bar-wrap {
+      margin-bottom: 0.75rem;
+    }
+
+    .score-bar-track {
+      height: 5px;
+      background: var(--surface2);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 0.3rem;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #6366f1, #a5b4fc);
+      width: 0%;
+      transition: width 1.6s cubic-bezier(.4,0,.2,1) 0.4s;
+    }
+
+    .score-sub {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text3);
+    }
+
+    /* Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      animation: up 0.5s ease both;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.2s; }
+    .card:nth-child(2) { animation-delay: 0.3s; }
+
+    .card-full {
+      grid-column: 1 / -1;
+      animation-delay: 0.4s;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+
+    .card-icon.green { background: rgba(52,211,153,0.12); }
+    .card-icon.yellow { background: rgba(251,191,36,0.12); }
+    .card-icon.indigo { background: rgba(99,102,241,0.12); }
+    .card-icon.blue { background: rgba(96,165,250,0.12); }
+
+    .card-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .feedback-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .feedback-list li {
+      display: flex;
+      gap: 0.65rem;
+      font-size: 0.875rem;
+      color: var(--text2);
+      line-height: 1.55;
+    }
+
+    .li-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 0.55rem;
+    }
+
+    .li-dot.green { background: var(--green); }
+    .li-dot.yellow { background: var(--yellow); }
+
+    .summary-text {
+      font-size: 0.92rem;
+      color: var(--text2);
+      line-height: 1.75;
+    }
+
+    /* Transcript */
+    .transcript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      max-height: 320px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .transcript-list::-webkit-scrollbar { width: 3px; }
+    .transcript-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+
+    .t-item {
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      line-height: 1.6;
+    }
+
+    .t-item.ai {
+      background: rgba(99,102,241,0.05);
+      border: 1px solid rgba(129,140,248,0.12);
+    }
+
+    .t-item.user {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .t-role {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+
+    .t-item.ai .t-role { color: var(--indigo); }
+    .t-item.user .t-role { color: var(--text3); }
+    .t-item.ai .t-content { color: var(--text2); }
+    .t-item.user .t-content { color: var(--text3); }
+
+    /* CTA */
+    .cta {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 2.5rem;
+      animation: up 0.5s ease 0.6s both;
+    }
+
+    .cta-btn {
+      padding: 0.85rem 2rem;
+      border-radius: 10px;
+      font-family: var(--display);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .cta-primary {
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      color: white;
+      border: none;
+    }
+
+    .cta-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.35); }
+
+    .cta-ghost {
+      background: transparent;
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .cta-ghost:hover { border-color: var(--border2); color: var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav>
+  <a class="logo" href="index.html">
+    <div class="logo-dot"></div>
+    interview.ai
+  </a>
+  <div class="nav-btns">
+    <a href="index.html" class="btn btn-ghost">Dashboard</a>
+    <a href="index.html" class="btn btn-solid">New Interview →</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="page-header">
+    <div class="page-tag">Session Complete</div>
+    <div class="page-title">Interview Report</div>
+    <div class="page-meta" id="pageMeta">Loading...</div>
+  </div>
+
+  <!-- Score hero -->
+  <div class="score-hero">
+    <div class="score-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="55"/>
+        <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="55"/>
+      </svg>
+      <div class="score-center">
+        <div class="score-num" id="scoreNum">—</div>
+        <div class="score-denom">/ 100</div>
+      </div>
+    </div>
+
+    <div class="score-info">
+      <div class="score-grade" id="scoreGrade">—</div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-track">
+          <div class="score-bar-fill" id="scoreBarFill"></div>
+        </div>
+        <div class="score-sub" id="scoreSub">Calculating...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Strengths + Improvements -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon green">✦</div>
+        <div class="card-title">Strengths</div>
+      </div>
+      <ul class="feedback-list" id="strengthsList">
+        <li><div class="li-dot green"></div><div>Loading...</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon yellow">⟶</div>
+        <div class="card-title">Areas to Improve</div>
+      </div>
+      <ul class="feedback-list" id="improvsList">
+        <li><div class="li-dot yellow"></div><div>Loading...</div></li>
+      </ul>
+    </div>
+
+    <!-- Summary -->
+    <div class="card card-full" style="animation-delay:0.4s">
+      <div class="card-header">
+        <div class="card-icon indigo">◈</div>
+        <div class="card-title">Overall Assessment</div>
+      </div>
+      <div class="summary-text" id="summaryText">Loading...</div>
+    </div>
+
+    <!-- Transcript -->
+    <div class="card card-full" style="animation-delay:0.5s">
+      <div class="card-header">
+        <div class="card-icon blue">≡</div>
+        <div class="card-title">Full Transcript</div>
+      </div>
+      <div class="transcript-list" id="transcriptList">
+        <div style="font-family:var(--mono);font-size:0.75rem;color:var(--text3)">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">
+    <a href="index.html" class="cta-btn cta-primary">Practice Again →</a>
+    <a href="index.html" class="cta-btn cta-ghost">Back to Home</a>
+  </div>
+
+</div>
+
+<script>
+  const result = JSON.parse(localStorage.getItem('session_result') || '{}');
+
+  if (!result?.id) {
+    document.getElementById('pageMeta').textContent = 'No report found — complete an interview first.';
+  } else {
+    render(result);
+  }
+
+  function render(d) {
+    const type = (d.interview_type || '').replace('_', ' ').toUpperCase();
+    const rawDate = (d.ended_at || d.created_at) + 'Z';
+    const date = new Date(rawDate).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    document.getElementById('pageMeta').textContent = `${type}  ·  ${date}`;
+
+    const score = d.score || 0;
+
+    // Animate ring
+    setTimeout(() => {
+      const circumference = 345;
+      document.getElementById('ringFill').style.strokeDashoffset = circumference - (score / 100) * circumference;
+      document.getElementById('scoreNum').textContent = score;
+      document.getElementById('scoreBarFill').style.width = score + '%';
+    }, 200);
+
+    // Ring color
+    const ring = document.getElementById('ringFill');
+    const bar = document.getElementById('scoreBarFill');
+    let color;
+    if (score >= 80) color = 'var(--green)';
+    else if (score >= 60) color = 'var(--indigo2)';
+    else if (score >= 40) color = 'var(--yellow)';
+    else color = 'var(--red)';
+    ring.style.stroke = color;
+    bar.style.background = color;
+    document.getElementById('scoreNum').style.color = color;
+
+    // Grade
+    const grades = [
+      [90, 'Outstanding 🌟', 'Exceptional performance — you nailed it'],
+      [75, 'Strong 👍',      'Solid answers with good depth'],
+      [60, 'Good 📈',        'On the right track, keep sharpening'],
+      [40, 'Developing 🔧', 'Good start — focused practice will help'],
+      [0,  'Keep Going 💪', 'Every attempt builds the skill'],
+    ];
+    const [, grade, sub] = grades.find(([min]) => score >= min);
+    document.getElementById('scoreGrade').textContent = grade;
+    document.getElementById('scoreSub').textContent = sub;
+
+    // Feedback
+    parseFeedback(d.feedback || '');
+
+    // Transcript
+    renderTranscript(d.messages || []);
+  }
+
+  function parseFeedback(raw) {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const strengths = [], improvs = [];
+    let summary = '', section = '';
+
+    for (const line of lines) {
+      if (line.startsWith('STRENGTHS:'))   { section = 'S'; continue; }
+      if (line.startsWith('IMPROVEMENTS:')){ section = 'I'; continue; }
+      if (line.startsWith('SUMMARY:'))     { summary = line.slice(8).trim(); section = 'SUM'; continue; }
+      if (line.startsWith('SCORE:'))       { continue; }
+      if (section === 'S'   && line.startsWith('-')) strengths.push(line.slice(1).trim());
+      if (section === 'I'   && line.startsWith('-')) improvs.push(line.slice(1).trim());
+      if (section === 'SUM') summary += ' ' + line;
+    }
+
+    document.getElementById('strengthsList').innerHTML = strengths.length
+      ? strengths.map(s => `<li><div class="li-dot green"></div><div>${s}</div></li>`).join('')
+      : '<li><div class="li-dot green"></div><div>See full feedback summary below.</div></li>';
+
+    document.getElementById('improvsList').innerHTML = improvs.length
+      ? improvs.map(i => `<li><div class="li-dot yellow"></div><div>${i}</div></li>`).join('')
+      : '<li><div class="li-dot yellow"></div><div>See full feedback summary below.</div></li>';
+
+    document.getElementById('summaryText').textContent = summary.trim() || raw.slice(0, 400) + '...';
+  }
+
+  function renderTranscript(msgs) {
+    const el = document.getElementById('transcriptList');
+    if (!msgs.length) {
+      el.innerHTML = '<div style="font-family:var(--mono);font-size:0.75rem;color:var(--text3)">No messages recorded.</div>';
+      return;
+    }
+    el.innerHTML = msgs.map(m => `
+      <div class="t-item ${m.role === 'assistant' ? 'ai' : 'user'}">
+        <div class="t-role">${m.role === 'assistant' ? 'Interviewer' : 'You'}</div>
+        <div class="t-content">${m.content}</div>
+      </div>
+    `).join('');
+  }
+</script>
+</body>
+</html>
