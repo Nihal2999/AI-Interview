@@ -30,7 +30,9 @@ async def init_db():
             'devops', 'ai_llm', 'system_concepts'
         ]
         for val in new_types:
-            await conn.execute(text(
-                f"ALTER TYPE interviewtype ADD VALUE IF NOT EXISTS '{val}'"
-            ))
-        await conn.run_sync(Base.metadata.create_all)
+            try:
+                await conn.execute(text(
+                    f"ALTER TYPE interviewtype ADD VALUE IF NOT EXISTS '{val}'"
+                ))
+            except Exception:
+                pass
