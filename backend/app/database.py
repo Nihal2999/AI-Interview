@@ -23,7 +23,8 @@ async def get_db():
 
 async def init_db():
     async with engine.begin() as conn:
-        # Add new enum values if they don't exist (PostgreSQL specific)
+        await conn.run_sync(Base.metadata.create_all)
+        
         new_types = [
             'python', 'databases_messaging',
             'devops', 'ai_llm', 'system_concepts'
